@@ -3,6 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, MessageCircle, Download, BookOpen, ChevronDown, ChevronUp, Clock, Hash, Target, BookMarked, BarChart2 } from 'lucide-react';
 import type { Course, COPOMapping } from '../types';
 import { courseService } from '../services/courseService';
+import { API_BASE } from '../services/api';
 import { useToast } from '../context/ToastContext';
 
 const TABS = ['Overview', 'Units & Topics', 'Course Outcomes', 'Textbooks', 'CO-PO Mapping'] as const;
@@ -39,7 +40,7 @@ export default function CourseDetailPage() {
       // Also fetch CO-PO mapping from the dedicated endpoint
       if (c) {
         try {
-          const res = await fetch(`/api/mapping/${c.id}`);
+          const res = await fetch(`${API_BASE}/api/mapping/${c.id}`);
           if (res.ok) {
             const json = await res.json();
             if (json.success && json.data?.matrix) {
