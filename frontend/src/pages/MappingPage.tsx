@@ -26,7 +26,10 @@ export default function MappingPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [courseId, setCourseId] = useState('');
   const [mappings, setMappings] = useState<COPOMapping[]>([]);
+  const [mappingLoaded, setMappingLoaded] = useState(false);
+  const [courseDetails, setCourseDetails] = useState<Course | null>(null);
   const course = courses.find(c => c.id === courseId) ?? courses[0];
+  const displayCourse = courseDetails?.id === course?.id ? courseDetails : course;
 
   useEffect(() => {
     courseService.getAllCourses().then(data => {
@@ -37,18 +40,32 @@ export default function MappingPage() {
 
   useEffect(() => {
     if (!course) return;
+    setCourseDetails(null);
+    courseService.getCourseById(course.id).then(detail => {
+      if (detail?.id === course.id) setCourseDetails(detail);
+    });
+  }, [course?.id]);
+
+  useEffect(() => {
+    if (!course) return;
+    setMappings([]);
+    setMappingLoaded(false);
     fetch(`${API_BASE}/api/mapping/${course.id}`)
       .then(response => response.ok ? response.json() : null)
       .then(json => {
         const rows = json?.data?.matrix as { co: string; values: Record<string, number> }[] | undefined;
         setMappings(rows?.map(row => ({ courseOutcomeId: row.co, mappings: row.values })) ?? []);
+        setMappingLoaded(true);
       })
-      .catch(() => setMappings([]));
+      .catch(() => {
+        setMappings([]);
+        setMappingLoaded(true);
+      });
   }, [course]);
 
-  if (!course) return <div className="min-h-screen bg-gray-50 p-8 text-gray-500">Loading mappings...</div>;
+  if (!displayCourse) return <div className="min-h-screen bg-gray-50 p-8 text-gray-500">Loading mappings...</div>;
 
-  const effectiveMappings = mappings.length > 0 ? mappings : course.mappings;
+  const effectiveMappings = mappings.length > 0 ? mappings : displayCourse.mappings;
   const poKeys = [...new Set(effectiveMappings.flatMap(mapping => Object.keys(mapping.mappings)))].sort((a, b) => {
     const aNum = Number(a.replace(/\D/g, '')) || 0;
     const bNum = Number(b.replace(/\D/g, '')) || 0;
@@ -82,9 +99,9 @@ export default function MappingPage() {
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b border-gray-50 flex flex-wrap items-center justify-between gap-2">
             <div>
-              <h2 className="font-semibold text-gray-800">{course.name} — CO-PO Mapping Matrix</h2>
-              <p className="text-xs text-gray-400 mt-0.5">{course.code} · {course.program} · {course.regulation}</p>
-              {!poKeys.some(key => key.startsWith('PSO')) && <p className="text-xs text-amber-600 mt-1">No course-specific CO-PSO mapping is present in the imported syllabus.</p>}
+              <h2 className="font-semibold text-gray-800">{displayCourse.name} — CO-PO Mapping Matrix</h2>
+              <p className="text-xs text-gray-400 mt-0.5">{displayCourse.code} · {displayCourse.program} · {displayCourse.regulation}</p>
+              {mappingLoaded && effectiveMappings.length === 0 && <p className="text-xs text-amber-600 mt-1">No course-specific CO-PSO mapping is present in the imported syllabus.</p>}
             </div>
             <div className="flex gap-3 flex-wrap">
               {[
@@ -118,7 +135,7 @@ export default function MappingPage() {
               </thead>
               <tbody>
                 {effectiveMappings.map((m, i) => {
-                  const co = course.courseOutcomes.find(c => c.code === m.courseOutcomeId);
+                  const co = displayCourse.courseOutcomes.find(c => c.code === m.courseOutcomeId);
                   return (
                     <tr key={m.courseOutcomeId} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50/40'}>
                       <td className="px-4 py-3 sticky left-0 bg-inherit z-10">
@@ -147,7 +164,7 @@ export default function MappingPage() {
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
           <h3 className="font-semibold text-gray-800 mb-4">Course Outcomes</h3>
           <div className="space-y-2">
-            {course.courseOutcomes.map(co => (
+            {displayCourse.courseOutcomes.map(co => (
               <div key={co.id} className="flex items-start gap-3 py-2 border-b border-gray-50 last:border-0">
                 <span className="shrink-0 w-10 text-sm font-bold text-blue-700 pt-0.5">{co.code}</span>
                 <span className="text-sm text-gray-600 leading-relaxed">{co.description}</span>
