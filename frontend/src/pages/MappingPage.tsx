@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { courseService } from '../services/courseService';
+import { API_BASE } from '../services/api';
 import type { Course, COPOMapping } from '../types';
 
 const mappingColors: Record<number, string> = {
@@ -36,7 +37,7 @@ export default function MappingPage() {
 
   useEffect(() => {
     if (!course) return;
-    fetch(`/api/mapping/${course.id}`)
+    fetch(`${API_BASE}/api/mapping/${course.id}`)
       .then(response => response.ok ? response.json() : null)
       .then(json => {
         const rows = json?.data?.matrix as { co: string; values: Record<string, number> }[] | undefined;
