@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Send, Trash2, ChevronDown, BookOpen, ExternalLink } from 'lucide-react';
 import type { ChatMessage as ChatMessageType } from '../types';
 import { aiService, type AIChatMessage, type Resource } from '../services/aiService';
+import { API_BASE } from '../services/api';
 import AIRobotHero from '../components/AIRobotHero';
 import ChatMessageComponent, { TypingIndicator } from '../components/ChatMessage';
 import { useToast } from '../context/ToastContext';
@@ -98,7 +99,7 @@ export default function AssistantPage() {
 
   // ── Fetch regulations on mount ────────────────────────────────────────────
   useEffect(() => {
-    fetch('/api/regulations')
+    fetch(`${API_BASE}/api/regulations`)
       .then(r => r.json())
       .then(json => {
         if (json.success && Array.isArray(json.data)) {
@@ -113,7 +114,7 @@ export default function AssistantPage() {
   // ── Fetch courses when regulation changes ─────────────────────────────────
   useEffect(() => {
     if (!selectedRegulation) return;
-    fetch(`/api/courses?regulation=${encodeURIComponent(selectedRegulation)}`)
+    fetch(`${API_BASE}/api/courses?regulation=${encodeURIComponent(selectedRegulation)}`)
       .then(r => r.json())
       .then(json => {
         if (json.success && Array.isArray(json.data)) {

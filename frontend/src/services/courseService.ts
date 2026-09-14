@@ -11,6 +11,7 @@
  */
 import type { Course, Unit, Topic, CourseOutcome, Textbook, ReferenceBook, COPOMapping, FilterOptions } from '../types';
 import { mockCourses } from '../data/mockData';
+import { API_BASE } from './api';
 
 // ── Backend list shape (GET /api/courses) ─────────────────────────────────────
 
@@ -245,7 +246,7 @@ interface Envelope<T> {
 }
 
 async function get<T>(path: string): Promise<T> {
-  const res = await fetch(path, { headers: { 'Content-Type': 'application/json' } });
+  const res = await fetch(`${API_BASE}${path}`, { headers: { 'Content-Type': 'application/json' } });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const json: Envelope<T> = await res.json();
   if (!json.success || json.data === undefined) {
