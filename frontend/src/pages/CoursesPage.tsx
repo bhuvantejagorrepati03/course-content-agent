@@ -33,15 +33,22 @@ export default function CoursesPage() {
   }, []);
 
   useEffect(() => {
-    let result = courses;
-    if (search) result = result.filter(c =>
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.code.toLowerCase().includes(search.toLowerCase())
-    );
-    if (filterProgram) result = result.filter(c => c.program === filterProgram);
-    if (filterYear) result = result.filter(c => c.year === filterYear);
-    if (filterReg) result = result.filter(c => c.regulation === filterReg);
-    setFiltered(result);
+    let active = true;
+
+    const applyFilters = (results: Course[]) => {
+      if (filterProgram) results = results.filter(c => c.program === filterProgram);
+      if (filterYear) results = results.filter(c => c.year === filterYear);
+      if (filterReg) results = results.filter(c => c.regulation === filterReg);
+      if (active) setFiltered(results);
+    };
+
+    if (!search.trim()) {
+      applyFilters(courses);
+    } else {
+      courseService.searchCourses(search.trim()).then(applyFilters);
+    }
+
+    return () => { active = false; };
   }, [search, filterProgram, filterYear, filterReg, courses]);
 
   const programs = [...new Set(courses.map(c => c.program))].sort();
