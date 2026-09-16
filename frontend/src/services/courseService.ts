@@ -257,6 +257,10 @@ async function get<T>(path: string): Promise<T> {
 
 const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
 
+function normalizeSearchText(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
 // ── Public service ────────────────────────────────────────────────────────────
 
 export const courseService = {
@@ -310,24 +314,34 @@ export const courseService = {
   },
 
   async searchCourses(query: string): Promise<Course[]> {
+    const term = query.trim();
+    if (!term) return [];
+
+    const q = normalizeSearchText(term);
+
     try {
-      const data = await get<BackendCourseList[]>(
-        `/api/courses?search=${encodeURIComponent(query)}`
+      const raw = await get<BackendCourseList[] | { data?: BackendCourseList[] }>(
+        `/api/courses?search=${encodeURIComponent(term)}`
       );
-      return data.map(mapListItem);
+      const items = Array.isArray(raw)
+        ? raw
+        : Array.isArray(raw?.data)
+          ? raw.data
+          : [];
+
+      const filtered = items.filter(course => {
+        const haystack = `${course.course_name ?? ''} ${course.course_code ?? ''}`.toLowerCase();
+        return haystack.includes(q);
+      });
+
+      return filtered.map(mapListItem);
     } catch (err) {
       console.warn('[courseService] searchCourses fell back to mock:', err);
       await delay(150);
-      const q = query.toLowerCase();
-      return mockCourses.filter(c =>
-        c.name.toLowerCase().includes(q) ||
-        c.code.toLowerCase().includes(q) ||
-        c.program.toLowerCase().includes(q) ||
-        c.units.some(u =>
-          u.title.toLowerCase().includes(q) ||
-          u.topics.some(t => t.title.toLowerCase().includes(q))
-        )
-      );
+      return mockCourses.filter(c => {
+        const haystack = `${c.name} ${c.code}`.toLowerCase();
+        return haystack.includes(q);
+      });
     }
   },
 

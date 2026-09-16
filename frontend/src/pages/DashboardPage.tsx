@@ -119,14 +119,25 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    if (!searchQuery.trim()) { setSearchResults([]); setSearching(false); return; }
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      setSearching(false);
+      return;
+    }
+
     setSearching(true);
     const t = setTimeout(() => {
-      courseService.searchCourses(searchQuery).then(r => {
-        setSearchResults(r);
-        setSearching(false);
-      });
+      courseService.searchCourses(searchQuery)
+        .then(r => {
+          setSearchResults(r);
+          setSearching(false);
+        })
+        .catch(() => {
+          setSearchResults([]);
+          setSearching(false);
+        });
     }, 300);
+
     return () => clearTimeout(t);
   }, [searchQuery]);
 
