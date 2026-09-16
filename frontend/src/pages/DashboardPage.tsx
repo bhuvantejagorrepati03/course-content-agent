@@ -329,6 +329,7 @@ export default function DashboardPage() {
         </section>
 
         {/* Recently Added Courses */}
+        {!searchQuery.trim()&&(
         <section>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-base font-bold text-gray-800">
@@ -389,6 +390,7 @@ export default function DashboardPage() {
             )}
           </div>
         </section>
+        )}
 
         {/* Bottom CTA strip — faculty only */}
         {isFaculty && (
