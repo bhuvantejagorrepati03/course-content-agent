@@ -207,31 +207,54 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
-          {/* Search Dropdown */}
-{searchQuery.trim() && !searching && (
-  <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden z-50">
-    {searchResults.length > 0 ? (
-      searchResults.slice(0, 6).map(course => (
-        <button
-          key={course.id}
-          onClick={() => navigate(`/courses/${course.id}`)}
-          className="w-full text-left px-4 py-3 hover:bg-blue-50 border-b border-gray-100"
-        >
-          <p className="text-sm font-semibold text-gray-800">
-            {course.name}
-          </p>
-          <p className="text-xs text-blue-600 font-mono mt-1">
-            {course.code} · {course.regulation}
-          </p>
-        </button>
-      ))
-    ) : (
-      <div className="px-4 py-4 text-sm text-gray-500">
-        No courses found
-      </div>
-    )}
-  </div>
-)}
+          {/* Search bar */}
+<div className="relative max-w-2xl">
+  <Search
+    size={18}
+    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+  />
+
+  <input
+    value={searchQuery}
+    onChange={e => setSearchQuery(e.target.value)}
+    placeholder="Search courses, topics, units, textbooks..."
+    className="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-white text-gray-800 placeholder-gray-400 text-sm shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+    aria-label="Search courses and topics"
+  />
+
+  {searching && (
+    <div className="absolute right-4 top-1/2 -translate-y-1/2">
+      <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+    </div>
+  )}
+
+  {/* Search Dropdown */}
+  {searchQuery.trim() && !searching && (
+    <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden z-50">
+      {searchResults.length > 0 ? (
+        searchResults.slice(0, 6).map(course => (
+          <button
+            key={course.id}
+            onClick={() => navigate(`/courses/${course.id}`)}
+            className="w-full text-left px-4 py-3 hover:bg-blue-50 border-b border-gray-100"
+          >
+            <p className="text-sm font-semibold text-gray-800">
+              {course.name}
+            </p>
+
+            <p className="text-xs text-blue-600 font-mono mt-1">
+              {course.code} · {course.regulation}
+            </p>
+          </button>
+        ))
+      ) : (
+        <div className="px-4 py-4 text-sm text-gray-500">
+          No courses found
+        </div>
+      )}
+    </div>
+  )}
+</div>
 
           {/* Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8">
