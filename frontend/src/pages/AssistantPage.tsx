@@ -184,7 +184,7 @@ export default function AssistantPage() {
         timestamp: new Date(),
       }]);
     }
-  }, [isTyping, selectedCourseId, history]);
+  }, [isTyping, selectedCourseId, selectedRegulation, history]);
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(input); }

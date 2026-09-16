@@ -96,6 +96,13 @@ interface BackendEnvelope {
   error?: { code: string; message: string };
 }
 
+interface CourseContext {
+  id: number;
+  course_name: string;
+  course_code: string;
+  regulation: string;
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function genId(): string {
@@ -116,6 +123,39 @@ function timeoutSignal(ms: number): AbortSignal {
   return ctrl.signal;
 }
 
+function normalise(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+async function resolveCourseContext(
+  question: string,
+  selectedCourseId: string,
+  selectedRegulation: string,
+): Promise<{ courseId: string; regulation: string }> {
+  const explicitRegulation = question.match(/\bR[-\s]?(\d{2,4})\b/i)?.[1];
+  const explicitCode = question.match(/\b\d{2}[A-Z]{2,4}\d{3}[A-Z]?\b/i)?.[0].toUpperCase();
+  const regulation = explicitRegulation ? `R${explicitRegulation}` : selectedRegulation;
+  const response = await fetch(
+    `${API_BASE}/api/courses${regulation ? `?regulation=${encodeURIComponent(regulation)}` : ''}`,
+  );
+  if (!response.ok) return { courseId: explicitRegulation || explicitCode ? '' : selectedCourseId, regulation };
+
+  const envelope = await response.json() as { success: boolean; data?: CourseContext[] };
+  const courses = envelope.success && Array.isArray(envelope.data) ? envelope.data : [];
+  const normalisedQuestion = normalise(question);
+  const matched = courses.find(course =>
+    (explicitCode && course.course_code.toUpperCase() === explicitCode) ||
+    normalisedQuestion.includes(normalise(course.course_name)),
+  );
+
+  if (matched) {
+    return { courseId: String(matched.id), regulation: matched.regulation };
+  }
+
+  // An explicit regulation must never inherit a course from another regulation.
+  return { courseId: explicitRegulation || explicitCode ? '' : selectedCourseId, regulation };
+}
+
 // ── Service ───────────────────────────────────────────────────────────────────
 
 export const aiService = {
@@ -134,12 +174,23 @@ export const aiService = {
     history: HistoryEntry[] = [],
     onTyping?: (partialText: string) => void,
   ): Promise<AIChatMessage> {
-    const numericId = parseInt(courseId, 10);
+    const explicitRegulation = question.match(/\bR[-\s]?(\d{2,4})\b/i)?.[1];
+    const explicitCode = question.match(/\b\d{2}[A-Z]{2,4}\d{3}[A-Z]?\b/i);
+    let resolvedCourseId = explicitRegulation || explicitCode ? '' : courseId;
+    let resolvedRegulation = explicitRegulation ? `R${explicitRegulation}` : regulation;
+    try {
+      ({ courseId: resolvedCourseId, regulation: resolvedRegulation } =
+        await resolveCourseContext(question, courseId, regulation));
+    } catch (err) {
+      console.warn('[aiService] Course context resolution failed:', err);
+    }
+
+    const numericId = parseInt(resolvedCourseId, 10);
 
     const endpoint = `${API_BASE}/api/chat`;
     const payload = {
       course_id: isNaN(numericId) ? null : numericId,
-      regulation: regulation || null,
+      regulation: resolvedRegulation || null,
       message: question,
       history: history.slice(-6),
     };
