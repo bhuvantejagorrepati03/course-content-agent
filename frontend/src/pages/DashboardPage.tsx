@@ -207,6 +207,31 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
+          {/* Search Dropdown */}
+{searchQuery.trim() && !searching && (
+  <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden z-50">
+    {searchResults.length > 0 ? (
+      searchResults.slice(0, 6).map(course => (
+        <button
+          key={course.id}
+          onClick={() => navigate(`/courses/${course.id}`)}
+          className="w-full text-left px-4 py-3 hover:bg-blue-50 border-b border-gray-100"
+        >
+          <p className="text-sm font-semibold text-gray-800">
+            {course.name}
+          </p>
+          <p className="text-xs text-blue-600 font-mono mt-1">
+            {course.code} · {course.regulation}
+          </p>
+        </button>
+      ))
+    ) : (
+      <div className="px-4 py-4 text-sm text-gray-500">
+        No courses found
+      </div>
+    )}
+  </div>
+)}
 
           {/* Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8">
