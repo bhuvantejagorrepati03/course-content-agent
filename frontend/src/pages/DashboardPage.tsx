@@ -214,14 +214,6 @@ export default function DashboardPage() {
     className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
   />
 
-  <input
-    value={searchQuery}
-    onChange={e => setSearchQuery(e.target.value)}
-    placeholder="Search courses, topics, units, textbooks..."
-    className="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-white text-gray-800 placeholder-gray-400 text-sm shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-    aria-label="Search courses and topics"
-  />
-
   {searching && (
     <div className="absolute right-4 top-1/2 -translate-y-1/2">
       <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
